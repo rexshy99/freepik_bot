@@ -27,17 +27,26 @@ class Freepik:
     def register_on_premium_end(self, f):
         self.on_premium_end = f
 
-    def _solve_invisible_captcha(sitekey, self, resp: requests.Response):
-        for sitekey_re in self.sitekey_res:
-            try:
-                sitekey = sitekey_re.search(resp.text).group(1)
-            except AttributeError as e:
-                continue
-        try:
-            with threading.Lock():
-                return self.solver.recaptcha(sitekey=sitekey, url=resp.request.url, invisible=1)['code']
-        except Exception as e:
-            raise e
+    def _solve_invisible_captcha(self, resp: requests.Response):
+    # Initialize sitekey as None
+    sitekey = None
+    # Loop through the sitekey regular expressions
+    for sitekey_re in self.sitekey_res:
+        # Try to match the sitekey in the response text
+        match = sitekey_re.search(resp.text)
+        # If there is a match, assign the sitekey and break the loop
+        if match:
+            sitekey = match.group(1)
+            break
+    # If sitekey is still None, raise an exception
+    if sitekey is None:
+        raise Exception("Sitekey not found")
+    # Try to solve the captcha using the solver
+    try:
+        with threading.Lock():
+            return self.solver.recaptcha(sitekey=sitekey, url=resp.request.url, invisible=1)['code']
+    except Exception as e:
+        raise e
 
     def sign_in(self) -> bool:
         print('signing in')
