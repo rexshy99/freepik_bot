@@ -28,6 +28,7 @@ class Freepik:
         self.on_premium_end = f
 
     def _solve_invisible_captcha(self, resp: requests.Response):
+        global sitekey
         for sitekey_re in self.sitekey_res:
             try:
                 sitekey = sitekey_re.search(resp.text).group(1)
